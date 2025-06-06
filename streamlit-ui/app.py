@@ -8,7 +8,7 @@ import json
 st.set_page_config(page_title="Advanced Salary & Loan Calculator", layout="centered")
 
 # API URL - use environment variable or default to backend service
-# API_URL = os.getenv("API_URL", "http://backend:8000")
+API_URL = os.getenv("API_URL", "http://backend:8000")
 
 def main():
     st.title("💰 Advanced Salary Loan Calculator")
@@ -75,6 +75,41 @@ def main():
                 st.error("Please enter a valid number for advance amount.")
         
         st.markdown("---")
+
+    if loan_type in ["Loan", "Both"]:
+        st.markdown("### 🏦 Salary Loan")
+
+        loan_amount = st.number_input("Requested Loan Amount:", placeholder = "e.g. 500000")
+        loan_term = st.selectbox("Loan Term (months)", [3, 6, 12, 18, 24])
+        interest_rate = st.slider("Annual Interest Rate (%)", 1, 30, 15)
+
+        if loan_amount:
+            try:
+                payload = {
+                    "loan_amount": loan_amount,
+                    "loan_term": loan_term,
+                    "interest_rate": interest_rate,
+                    "currency": currency
+                }
+
+                response = requests.post(f"{API_URL}/calculate_loan", json=payload)
+
+                if response.status_code == 200:
+                    data = response.json()
+                    st.success("Loan Calculation Successful ✅")
+
+                    st.write(f"**Monthly EMI:** {data['emi']:,.0f} {currency}")
+                    st.write(f"**Total Repayable:** {data['total_repayable']:,.0f} {currency}")
+
+                else:
+                    st.error("Error contacting loan calculation API.")
+
+            except:
+                st.error("Please enter valid number for loan amount.")
+
+    st.markdown("---")
+
+                    
 
 
 
