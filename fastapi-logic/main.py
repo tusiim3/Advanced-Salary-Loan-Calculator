@@ -25,6 +25,34 @@ class LoanRequest(BaseModel):
     loan_term: int
     currency: str
 
+advance_eligibility = {
+    "UGX": 500000,
+    "USD": 200,
+    "KES": 20000,
+    "TZS": 400000,
+    "GBP": 120,
+    "EUR": 150,
+    "RWF": 200000,
+}
+
+FEE_RATE = 0.03
+
+@app.post("/calculate_advance")
+def calculate_advance(req: AdvanceRequest):
+
+    if req.currency not in advance_eligibility:
+        raise HTTPException(status_code = 400, detail = "Unsupported currency")
+    
+    eligible = (
+        req.gross_salary >= advance_eligibility[req.currency] and
+        req.pay_frequency.strip().lower == "month"
+    )
+
+    max_advance = 0.5 * req.gross_salary
+
+    if not eligible or req.advance_amount > max_advance:
+        return {"eligible": False, "max_advance": round(max_advance, 2)}
+
 
 
 
