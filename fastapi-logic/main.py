@@ -68,7 +68,25 @@ def calculate_advance(req: AdvanceRequest):
         "max_advance": round(max_advance, 2)
     }
 
+def generate_amortisation_schedule(principal, rate_annual, term_months):
+    r = rate_annual / 12 / 100
+    if r == 0:
+        emi = principal / term_months
+    else:
+        emi = principal * r * (1 + r) ** term_months / ((1 + r) ** term_months - 1)
 
+        data = []
+        balance = principal
+
+        for month in range(1, term_months + 1):
+            interest = balance * r
+            principal_payment = emi - interest
+            balance -= principal_payment
+
+            data.append([month, round(emi, 2), round(principal_payment, 2), round(interest, 2), round(max(balance, 0)), 2)])
+
+        df = pd.DataFrame(data, columns = ["Month", "EMI", "Principal", "Interest", "Balance"]) #, "Total Payment" ])
+        return df, emi
 
 @app.post("/calculate_loan")
 def calculate_loan(req: LoanRequest):
