@@ -18,7 +18,7 @@ def main():
     col1, col2, col3, col4 = st.columns([2, 1.5, 0.5, 1.5])
 
     with col1:
-        gross_salary = st.number_input("Gross Salary:", placeholder = "e.g. 750000")
+        gross_salary = st.text_input("Gross Salary:", placeholder = "e.g. 750000")
         if gross_salary:
             st.session_state.gross_salary = gross_salary
     
@@ -26,7 +26,12 @@ def main():
         currency = st.selectbox("Currency:", ["UGX", "RWF", "KES", "TZS", "USD", "GBP", "EUR"], key="currency")
     
     with col3:
-        st.markdown("<br><b>per</b>", unsafe_allow_html = True)
+        st.markdown(
+    """
+    <div style='margin-top: 2.2em; text-align: center;'><b>per</b></div>
+    """,
+    unsafe_allow_html=True
+)
             
     with col4:
         pay_frequency = st.selectbox("", ["Week", "2 Weeks", "Month"], index=2)
@@ -39,7 +44,7 @@ def main():
 
     if loan_type in ["Advance", "Both"]:
         st.markdown("### 💸 Salary Advance")
-        advance_amount = st.number_input("Requested Advance Amount:", placeholder = "e.g. 150000")
+        advance_amount = st.text_input("Requested Advance Amount:", placeholder = "e.g. 150000")
 
         if advance_amount and gross_salary:
             try:
@@ -65,8 +70,10 @@ def main():
 
                     if data["eligible"]:
                         st.success("✅ Eligible")
-                        st.write(f"**Fee Rate ({data[ 'fee_rate']*100:.0f}%):** {data['fee']:,.0f} {currency}")
+                        st.write(f"**Maximum Eligible Advance:** {data['max_advance']:,.0f} {currency}")
+                        st.write(f"**Fee ({data[ 'fee_rate']*100:.0f}%):** {data['fee']:,.0f} {currency}")
                         st.write(f"**Total Repayable on Next Salary:** {data['total_repayable']:,.0f} {currency}")
+                        st.info(f"Advance will be deducted from your next salary paid {pay_frequency.lower()}")
                     else:
                         st.error("❌ You are not eligible for this amount.")
                 else:
@@ -79,7 +86,7 @@ def main():
     if loan_type in ["Loan", "Both"]:
         st.markdown("### 🏦 Salary Loan")
 
-        loan_amount = st.number_input("Requested Loan Amount:", placeholder = "e.g. 500000")
+        loan_amount = st.text_input("Requested Loan Amount:", placeholder = "e.g. 500000")
         loan_term = st.selectbox("Loan Term (months)", [3, 6, 12, 18, 24])
         interest_rate = st.slider("Annual Interest Rate (%)", 1, 30, 15)
 
