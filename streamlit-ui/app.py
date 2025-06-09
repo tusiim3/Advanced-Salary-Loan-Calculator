@@ -46,7 +46,7 @@ def main():
         st.markdown("### 💸 Salary Advance")
         advance_amount = st.text_input("Requested Advance Amount:", placeholder = "e.g. 150000")
 
-        if advance_amount and gross_salary:
+        if advance_amount:
             try:
                 payload = {
                     "gross_salary": gross_salary,
@@ -107,6 +107,20 @@ def main():
 
                     st.write(f"**Monthly EMI:** {data['emi']:,.0f} {currency}")
                     st.write(f"**Total Repayable:** {data['total_repayable']:,.0f} {currency}")
+
+                    # Show amortisation schedule in table
+                    st.markdown("#### 📊 Amortisation Schedule")
+                    schedule_df = pd.DataFrame(data["schedule"])
+                    st.dataframe(schedule_df)
+
+                    # Allow schedule to be downloaded as CSV
+                    csv = schedule_df.to_csv(index=False).encode('utf-8')
+                    st.download_button(
+                        "📥 Download Schedule as CSV",
+                        data=csv,
+                        file_name="amortisation_schedule.csv",
+                        mime="text/csv"
+                    )    
 
                 else:
                     st.error("Error contacting loan calculation API.")
