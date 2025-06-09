@@ -91,8 +91,7 @@ def generate_amortisation_schedule(principal, rate_annual, term_months):
                     round(emi, 2),
                     round(principal_payment, 2),
                     round(interest, 2),
-                    round(max(balance, 0)),
-                    2,
+                    round(max(balance, 0), 2)
                 ]
             )
 
