@@ -7,18 +7,19 @@ import json
 # Page configuration
 st.set_page_config(page_title="Advanced Salary & Loan Calculator", layout="centered")
 
-# API URL - use environment variable or default to backend service
+# Get API URL from environment variable or use local default
 API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 def main():
     st.title("💰 Advanced Salary Loan Calculator")
     st.markdown("---")
 
-    # Main layout 
+    # Main page layout 
     col1, col2, col3, col4 = st.columns([2, 1.5, 0.5, 1.5])
 
+    # Gross Salary input
     with col1:
-        gross_salary = st.text_input("Gross Salary:", placeholder = "e.g. 750000", )
+        gross_salary = st.text_input("Gross Salary:", placeholder = "e.g. 750000", help="Your gross salary before deductions")
         if gross_salary:
             st.session_state.gross_salary = gross_salary
     
@@ -36,7 +37,7 @@ def main():
 )
             
     with col4:
-        pay_frequency = st.selectbox("", ["Week", "2 Weeks", "Month"], index=2)
+        pay_frequency = st.selectbox("", ["Week", "2 Weeks", "Month"], index=2, help="How often you receive your salary")
 
     st.markdown("---")
 
@@ -44,12 +45,14 @@ def main():
     st.subheader("Choose Loan Type")
     loan_type = st.radio("", ["Advance", "Loan", "Both"], horizontal = True)
 
+    # Salary Advance Logic
     if loan_type in ["Advance", "Both"]:
         st.markdown("### 💸 Salary Advance")
-        advance_amount = st.text_input("Requested Advance Amount:", placeholder = "e.g. 150000")
+        advance_amount = st.text_input("Requested Advance Amount:", placeholder = "e.g. 150000", help="Amount you want to borrow")
 
         if advance_amount:
                 try:
+                    # Prepare input data for API request
                     gross_sal = float(gross_salary.strip())
                     adv_amt = float(advance_amount.strip())
                     payload = {
@@ -59,11 +62,13 @@ def main():
                         "pay_frequency": pay_frequency
                     }
 
+                    # Send request to backend API
                     response = requests.post(f"{API_URL}/calculate_advance", json=payload)
                     if response.status_code == 200:
                         data = response.json()
                         st.markdown(f"**Maximum Eligible Advance:** {data['max_advance']:,.0f} {currency}")
 
+                        # Show results depending on eligibility
                         if data["eligible"]:
                             st.success("✅ Eligible")
                             st.write(f"**Fee ({data[ 'fee_rate']*100:.0f}%):** {data['fee']:,.0f} {currency}")
@@ -77,15 +82,18 @@ def main():
 
         st.markdown("---")
 
+    # Salary Loan Logic
     if loan_type in ["Loan", "Both"]:
         st.markdown("### 🏦 Salary Loan")
 
-        loan_amount = st.text_input("Requested Loan Amount:", placeholder = "e.g. 500000")
-        loan_term = st.selectbox("Loan Term (months)", [3, 6, 12, 18, 24])
-        interest_rate = st.slider("Annual Interest Rate (%)", 1, 30, 15)
+        # Input fields for loan calculation
+        loan_amount = st.text_input("Requested Loan Amount:", placeholder = "e.g. 500000", help="Amount you want to borrow")
+        loan_term = st.selectbox("Loan Term (months)", [3, 6, 12, 18, 24], help="How many months to repay")
+        interest_rate = st.slider("Annual Interest Rate (%)", 1, 30, 15, help="Annual percentage rate")
 
         if loan_amount:
             try:
+                # Prepare payload for loan calculation
                 payload = {
                     "loan_amount": float(loan_amount),
                     "loan_term": loan_term,
@@ -93,6 +101,7 @@ def main():
                     "currency": currency
                 }
 
+                # Send loan calculation request to backend
                 response = requests.post(f"{API_URL}/calculate_loan", json=payload)
 
                 if response.status_code == 200:
@@ -107,7 +116,7 @@ def main():
                     schedule_df = pd.DataFrame(data["schedule"])
                     st.dataframe(schedule_df)
 
-                    # Allow schedule to be downloaded as CSV
+                    # Download button for schedule
                     csv = schedule_df.to_csv(index=False).encode('utf-8')
                     st.download_button(
                         "📥 Download Schedule as CSV",
@@ -123,12 +132,6 @@ def main():
                 st.error("Please enter valid number for loan amount.")
 
     st.markdown("---")
-
-                    
-
-
-
-
 
 # Run the main function
 if __name__ == "__main__":
