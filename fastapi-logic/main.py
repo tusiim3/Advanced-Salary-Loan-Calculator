@@ -49,7 +49,7 @@ def calculate_advance(req: AdvanceRequest):
 
     eligible = (
         req.gross_salary >= advance_eligibility[req.currency]
-        and req.pay_frequency.strip().lower == "month"
+        and req.pay_frequency.strip().lower() == "month"
     )
 
     max_advance = 0.5 * req.gross_salary
