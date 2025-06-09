@@ -49,43 +49,29 @@ def main():
         advance_amount = st.text_input("Requested Advance Amount:", placeholder = "e.g. 150000")
 
         if advance_amount:
-            # Check if gross_salary exists and is not empty
-            if not gross_salary or gross_salary.strip() == '':
-                st.warning("⚠️ Please enter your gross salary first.")
-            else:
                 try:
                     gross_sal = float(gross_salary.strip())
                     adv_amt = float(advance_amount.strip())
                     payload = {
-                        "gross_salary": float(gross_salary),
-                        "advance_amount": float(advance_amount),
+                        "gross_salary": gross_sal,
+                        "advance_amount": adv_amt,
                         "currency": currency,
                         "pay_frequency": pay_frequency
                     }
 
                     response = requests.post(f"{API_URL}/calculate_advance", json=payload)
                     if response.status_code == 200:
-                        """data = response.json()
-                        st.success(f"Eligible Advance Amount: {data['eligible_advance']}")
-                        st.info(f"Processing Fee: {data['processing_fee']}")
-                        st.info(f"Total Repayment: {data['total_repayment']}")
-                    else:
-                    st.error("Error calculating advance. Please try again.")
-    """
                         data = response.json()
-
                         st.markdown(f"**Maximum Eligible Advance:** {data['max_advance']:,.0f} {currency}")
 
                         if data["eligible"]:
                             st.success("✅ Eligible")
-                            st.write(f"**Maximum Eligible Advance:** {data['max_advance']:,.0f} {currency}")
                             st.write(f"**Fee ({data[ 'fee_rate']*100:.0f}%):** {data['fee']:,.0f} {currency}")
-                            st.write(f"**Total Repayable on Next Salary:** {data['total_repayable']:,.0f} {currency}")
-                            st.info(f"Advance will be deducted from your next salary paid {pay_frequency.lower()}")
+                            st.write(f"**Total Repayable:** {data['total_repayable']:,.0f} {currency}")
                         else:
                             st.error("❌ You are not eligible for this amount.")
                     else:
-                        st.error("Error contacting advance calculation API.")
+                        st.error("❌ Error contacting advance calculation API.")
                 except ValueError:
                     st.error("Please enter a valid number for advance amount.")
 
