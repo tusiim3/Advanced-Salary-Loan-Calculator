@@ -18,7 +18,7 @@ def main():
     col1, col2, col3, col4 = st.columns([2, 1.5, 0.5, 1.5])
 
     with col1:
-        gross_salary = st.text_input("Gross Salary:", placeholder = "e.g. 750000")
+        gross_salary = st.text_input("Gross Salary:", placeholder = "e.g. 750000", )
         if gross_salary:
             st.session_state.gross_salary = gross_salary
     
