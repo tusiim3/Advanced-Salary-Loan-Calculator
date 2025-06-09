@@ -8,7 +8,7 @@ import json
 st.set_page_config(page_title="Advanced Salary & Loan Calculator", layout="centered")
 
 # API URL - use environment variable or default to backend service
-API_URL = os.getenv("API_URL", "http://backend:8000")
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 
 def main():
     st.title("💰 Advanced Salary Loan Calculator")
@@ -23,7 +23,9 @@ def main():
             st.session_state.gross_salary = gross_salary
     
     with col2:
-        currency = st.selectbox("Currency:", ["UGX", "RWF", "KES", "TZS", "USD", "GBP", "EUR"], key="currency")
+        currency = st.selectbox("Currency:", ["UGX", "RWF", "KES", "TZS", "USD", "GBP", "EUR"], key="currency",)
+        if 'currency' not in st.session_state:
+            st.session_state.currency = currency
     
     with col3:
         st.markdown(
@@ -47,40 +49,46 @@ def main():
         advance_amount = st.text_input("Requested Advance Amount:", placeholder = "e.g. 150000")
 
         if advance_amount:
-            try:
-                payload = {
-                    "gross_salary": gross_salary,
-                    "advance_amount": advance_amount,
-                    "currency": currency,
-                    "pay_frequency": pay_frequency
-                }
+            # Check if gross_salary exists and is not empty
+            if not gross_salary or gross_salary.strip() == '':
+                st.warning("⚠️ Please enter your gross salary first.")
+            else:
+                try:
+                    gross_sal = float(gross_salary.strip())
+                    adv_amt = float(advance_amount.strip())
+                    payload = {
+                        "gross_salary": float(gross_salary),
+                        "advance_amount": float(advance_amount),
+                        "currency": currency,
+                        "pay_frequency": pay_frequency
+                    }
 
-                response = requests.post(f"{API_URL}/calculate_advance", json=payload)
-                if response.status_code == 200:
-                    """data = response.json()
-                    st.success(f"Eligible Advance Amount: {data['eligible_advance']}")
-                    st.info(f"Processing Fee: {data['processing_fee']}")
-                    st.info(f"Total Repayment: {data['total_repayment']}")
-                else:
-                   st.error("Error calculating advance. Please try again.")
-"""
-                    data = response.json()
-
-                    st.markdown(f"**Maximum Eligible Adavance:** {data['max_advance']:,.0f} {currency}")
-
-                    if data["eligible"]:
-                        st.success("✅ Eligible")
-                        st.write(f"**Maximum Eligible Advance:** {data['max_advance']:,.0f} {currency}")
-                        st.write(f"**Fee ({data[ 'fee_rate']*100:.0f}%):** {data['fee']:,.0f} {currency}")
-                        st.write(f"**Total Repayable on Next Salary:** {data['total_repayable']:,.0f} {currency}")
-                        st.info(f"Advance will be deducted from your next salary paid {pay_frequency.lower()}")
+                    response = requests.post(f"{API_URL}/calculate_advance", json=payload)
+                    if response.status_code == 200:
+                        """data = response.json()
+                        st.success(f"Eligible Advance Amount: {data['eligible_advance']}")
+                        st.info(f"Processing Fee: {data['processing_fee']}")
+                        st.info(f"Total Repayment: {data['total_repayment']}")
                     else:
-                        st.error("❌ You are not eligible for this amount.")
-                else:
-                    st.error("Error contacting advance calculation API.")
-            except:
-                st.error("Please enter a valid number for advance amount.")
-        
+                    st.error("Error calculating advance. Please try again.")
+    """
+                        data = response.json()
+
+                        st.markdown(f"**Maximum Eligible Advance:** {data['max_advance']:,.0f} {currency}")
+
+                        if data["eligible"]:
+                            st.success("✅ Eligible")
+                            st.write(f"**Maximum Eligible Advance:** {data['max_advance']:,.0f} {currency}")
+                            st.write(f"**Fee ({data[ 'fee_rate']*100:.0f}%):** {data['fee']:,.0f} {currency}")
+                            st.write(f"**Total Repayable on Next Salary:** {data['total_repayable']:,.0f} {currency}")
+                            st.info(f"Advance will be deducted from your next salary paid {pay_frequency.lower()}")
+                        else:
+                            st.error("❌ You are not eligible for this amount.")
+                    else:
+                        st.error("Error contacting advance calculation API.")
+                except ValueError:
+                    st.error("Please enter a valid number for advance amount.")
+
         st.markdown("---")
 
     if loan_type in ["Loan", "Both"]:
@@ -93,7 +101,7 @@ def main():
         if loan_amount:
             try:
                 payload = {
-                    "loan_amount": loan_amount,
+                    "loan_amount": float(loan_amount),
                     "loan_term": loan_term,
                     "interest_rate": interest_rate,
                     "currency": currency
