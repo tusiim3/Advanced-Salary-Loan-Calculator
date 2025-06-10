@@ -5,6 +5,7 @@ import pandas as pd
 
 app = FastAPI()
 
+# Configure CORS middleware to allow cross-origin requests from frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Update this with your frontend domain in production
@@ -13,21 +14,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+# Request model for salary advance calculation
 class AdvanceRequest(BaseModel):
     gross_salary: float
     advance_amount: float
     currency: str
     pay_frequency: str
 
-
+# Request model for loan calculation
 class LoanRequest(BaseModel):
     loan_amount: float
     interest_rate: float
     loan_term: int
     currency: str
 
-
+# Predefined eligibility conditions for salary advance by currency
 advance_eligibility = {
     "UGX": 500000,
     "USD": 200,
@@ -40,7 +41,7 @@ advance_eligibility = {
 
 FEE_RATE = 0.03
 
-
+# Endpoint to calculate salary advance eligibility, fee, and total repayable amount
 @app.post("/calculate_advance")
 def calculate_advance(req: AdvanceRequest):
 
@@ -57,6 +58,7 @@ def calculate_advance(req: AdvanceRequest):
     if not eligible or req.advance_amount > max_advance:
         return {"eligible": False, "max_advance": round(max_advance, 2)}
 
+    # Use pandas to compute fees and total repayable
     df = pd.DataFrame({"advance_amount": [req.advance_amount], "fee_rate": [FEE_RATE]})
     df["fee"] = df["advance_amount"] * df["fee_rate"]
     df["total_repayable"] = df["advance_amount"] + df["fee"]
@@ -69,7 +71,7 @@ def calculate_advance(req: AdvanceRequest):
         "max_advance": round(max_advance, 2),
     }
 
-
+# Generate loan amortisation schedule
 def generate_amortisation_schedule(principal, rate_annual, term_months):
     r = rate_annual / 12 / 100
     if r == 0:
@@ -100,7 +102,7 @@ def generate_amortisation_schedule(principal, rate_annual, term_months):
         )  # , "Total Payment" ])
         return df, emi
 
-
+# Endpoint to calculate the loan EMI and total repayable amount
 @app.post("/calculate_loan")
 def calculate_loan(req: LoanRequest):
     df, emi = generate_amortisation_schedule(
